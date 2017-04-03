@@ -100,12 +100,16 @@ if [ "$1" = 'postgres' ]; then
 
 		psql=( psql -v ON_ERROR_STOP=1 )
 
-		if [ "$POSTGRES_DB" != 'postgres' ]; then
-			"${psql[@]}" --username postgres <<-EOSQL
-				CREATE DATABASE "$POSTGRES_DB" ;
-			EOSQL
-			echo
-		fi
+		for dbname in $POSTGRES_DB;do
+			if [ "$dbname" != 'postgres' ]; then
+				"${psql[@]}" --username postgres <<-EOSQL
+					CREATE DATABASE "$dbname" ;
+				EOSQL
+				echo
+			fi
+		done
+
+		
 
 		if [ "$POSTGRES_USER" = 'postgres' ]; then
 			op='ALTER'
@@ -117,7 +121,10 @@ if [ "$1" = 'postgres' ]; then
 		EOSQL
 		echo
 
-		psql+=( --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" )
+		for dbname in $POSTGRES_DB;do
+			psql+=( --username "$POSTGRES_USER" --dbname "$dbname" )
+		done
+		
 
 		echo
 		for f in /docker-entrypoint-initdb.d/*; do
